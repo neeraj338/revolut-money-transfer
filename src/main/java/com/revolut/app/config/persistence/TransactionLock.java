@@ -44,17 +44,17 @@ public class TransactionLock {
 	}
 	
 	public void lock(String accountOne, String accountTwo) {
-		AccountLock accLock = accountLockMap.get(getAccountKey(accountOne, accountTwo));
-		accLock = (accLock == null ? accountLockMap.get(getAccountKey(accountTwo, accountOne)) : accLock);
+		AccountLock accLock = accountLockMap.get(getAccountLockKey(accountOne, accountTwo));
+		accLock = (accLock == null ? accountLockMap.get(getAccountLockKey(accountTwo, accountOne)) : accLock);
 		// double locking : to initialize the lock object
 		if (accLock == null) {
 			synchronized (this) {
-				accLock = accountLockMap.get(getAccountKey(accountOne, accountTwo));
-				accLock = (accLock == null ? accountLockMap.get(getAccountKey(accountTwo, accountOne)) : accLock);
+				accLock = accountLockMap.get(getAccountLockKey(accountOne, accountTwo));
+				accLock = (accLock == null ? accountLockMap.get(getAccountLockKey(accountTwo, accountOne)) : accLock);
 				if (accLock == null) {
 					AccountLock newLock = new AccountLock(new ReentrantLock(), 0);
-					accountLockMap.put(getAccountKey(accountOne, accountTwo), newLock);
-					accountLockMap.put(getAccountKey(accountTwo, accountOne), newLock);
+					accountLockMap.put(getAccountLockKey(accountOne, accountTwo), newLock);
+					accountLockMap.put(getAccountLockKey(accountTwo, accountOne), newLock);
 					accLock = newLock;
 				}
 			}
@@ -63,10 +63,10 @@ public class TransactionLock {
 		synchronized (this) {
 			accLock.lockCount.incrementAndGet();
 			// if other concurrent tx has removed from map using unlock- up it back
-			if (null == accountLockMap.get(getAccountKey(accountOne, accountTwo))
-					|| null == accountLockMap.get(getAccountKey(accountTwo, accountOne)) ) {
-				accountLockMap.put(getAccountKey(accountOne, accountTwo), accLock);
-				accountLockMap.put(getAccountKey(accountTwo, accountOne), accLock);
+			if (null == accountLockMap.get(getAccountLockKey(accountOne, accountTwo))
+					|| null == accountLockMap.get(getAccountLockKey(accountTwo, accountOne)) ) {
+				accountLockMap.put(getAccountLockKey(accountOne, accountTwo), accLock);
+				accountLockMap.put(getAccountLockKey(accountTwo, accountOne), accLock);
 			}
 		}
 		logger.info(" requested lock on accounts => {}, {}", accountOne, accountTwo);
@@ -94,8 +94,8 @@ public class TransactionLock {
 	}
 	
 	public void unlock(String accountOne, String accountTwo) {
-		AccountLock accLock = accountLockMap.get(getAccountKey(accountOne, accountTwo));
-		accLock =  (accLock == null ? accountLockMap.get(getAccountKey(accountTwo, accountOne)) : accLock );
+		AccountLock accLock = accountLockMap.get(getAccountLockKey(accountOne, accountTwo));
+		accLock =  (accLock == null ? accountLockMap.get(getAccountLockKey(accountTwo, accountOne)) : accLock );
 		if (accLock != null) {
 			int lockCount = accLock.lockCount.decrementAndGet();
 			accLock.lock.unlock();
@@ -106,8 +106,8 @@ public class TransactionLock {
 				synchronized (this) {
 					lockCount = accLock.lockCount.get();
 					if (lockCount == 0) {
-						accountLockMap.remove(getAccountKey(accountOne, accountTwo));
-						accountLockMap.remove(getAccountKey(accountTwo, accountOne));
+						accountLockMap.remove(getAccountLockKey(accountOne, accountTwo));
+						accountLockMap.remove(getAccountLockKey(accountTwo, accountOne));
 					}
 				}
 			}
@@ -143,7 +143,7 @@ public class TransactionLock {
 		return isAquired;
 	}
 
-	private  String getAccountKey(String accountOne, String accountTwo) {
+	private  String getAccountLockKey(String accountOne, String accountTwo) {
 		return String.format("%s%s%s", accountOne, ACCOUNT_JOINER, accountTwo);
 	}
 	

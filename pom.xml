@@ -333,8 +333,8 @@
                        <!--  Exclude package from test coverage -->
                        <exclude>**/*com/revolut/entity/**</exclude>
                        <exclude>**/*com/revolut/model/**</exclude>
-                       <exclude>**/*com/revolut/swagger/**</exclude>
-                       <exclude>**/*com/revolut/resteasy/servletconfig/**</exclude>
+                       <exclude>**/*com/revolut/app/config/swagger/**</exclude>
+                       <exclude>**/*com/revolut/app/config/servletconfig/**</exclude>
                         
                     </excludes>
                 </configuration>
