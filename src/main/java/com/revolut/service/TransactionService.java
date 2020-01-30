@@ -70,23 +70,19 @@ public class TransactionService {
 	
 	public void transfer(String fromAccount, String toAccount, BigDecimal amount) {
 		//sort it required, to prevent lock sequence for (a, b) => (b, c) => (c, a) [a, c]
-		String lockSmallFirst = fromAccount;
-		String lockNext = toAccount;
+		String lockSmallestFirst = fromAccount;
+		String lockBiggerNext = toAccount;
 		if(fromAccount.compareTo(toAccount) > 0) {
-			lockSmallFirst = toAccount;
-			lockNext = fromAccount;
+			lockSmallestFirst = toAccount;
+			lockBiggerNext = fromAccount;
 		}
 		
 		try {
 			
-			/* Acquire a global lock to prevent deadlock :
-			*  in case Thread1 -> transfer (a, b) and Thread2 -->transfer (b,a)
-			*/
-			txLock.lock(fromAccount, toAccount);
-			//once global lock is acquired lock both participant accounts 
-			txLock.lock(lockSmallFirst);
-			txLock.lock(lockNext);
-			logger.info(" A/C Transfer, full lock aquired for accounts => {}, {} ", lockSmallFirst, lockNext);
+			txLock.lock(lockSmallestFirst);
+			txLock.lock(lockBiggerNext);
+			
+			logger.info(" A/C Transfer, full lock aquired for accounts => {}, {} ", lockSmallestFirst, lockBiggerNext);
 			List<Transaction> txListToSave = new ArrayList<>();
 			Account fromAccountEntity = accountService.findOne(fromAccount);
 			Account toAccountEntity = accountService.findOne(toAccount);
@@ -109,10 +105,8 @@ public class TransactionService {
 			txRepository.saveAll(txListToSave);
 			
 		}finally {
-			txLock.unlock(lockNext);
-			txLock.unlock(lockSmallFirst);
-			//unlock global at the end
-			txLock.unlock(fromAccount, toAccount);
+			txLock.unlock(lockBiggerNext);
+			txLock.unlock(lockSmallestFirst);
 		}
 		
 	}
