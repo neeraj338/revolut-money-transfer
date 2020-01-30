@@ -44,6 +44,12 @@ public class TransactionLock {
 	}
 	
 	public void lock(String accountOne, String accountTwo) {
+		//sort it required, to prevent lock sequence for (a, b) => (b, c) => (c, a)
+		String t = accountOne;
+		if(t.compareTo(accountTwo) > 0) {
+			accountOne = accountTwo;
+			accountTwo = t;
+		}
 		AccountLock accLock = accountLockMap.get(getAccountLockKey(accountOne, accountTwo));
 		accLock = (accLock == null ? accountLockMap.get(getAccountLockKey(accountTwo, accountOne)) : accLock);
 		// double locking : to initialize the lock object
