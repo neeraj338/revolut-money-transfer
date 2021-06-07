@@ -33,7 +33,7 @@
 		<javassist.version>3.20.0-GA</javassist.version>
 
 		<slf4j.version>1.7.21</slf4j.version>
-		<logback.version>1.1.8</logback.version>
+		<logback.version>1.2.0</logback.version>
 		<commons-lang.version>3.9</commons-lang.version>
 		
 		<!-- Plugin versions -->
